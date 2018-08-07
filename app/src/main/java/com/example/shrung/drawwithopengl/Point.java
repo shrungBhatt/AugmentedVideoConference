@@ -10,6 +10,7 @@ import static android.opengl.GLES20.GL_FLOAT;
 import static android.opengl.GLES20.GL_FRAGMENT_SHADER;
 import static android.opengl.GLES20.GL_LINES;
 import static android.opengl.GLES20.GL_POINTS;
+import static android.opengl.GLES20.GL_TRIANGLES;
 import static android.opengl.GLES20.GL_VERTEX_SHADER;
 import static android.opengl.GLES20.glAttachShader;
 import static android.opengl.GLES20.glBindBuffer;
@@ -57,7 +58,7 @@ public class Point {
 
     public float squareCoords[];
     private int mColorHandle = -1;
-    private int mCubeBufferIdx;
+    private int mCubeBufferIdx = -1;
 
     public Point() {
 
@@ -93,11 +94,12 @@ public class Point {
         mPositionHandle = glGetAttribLocation(mProgram, ATTRIBUTE_POSITION);
 
 
-
         // Pass in the position information
-        glBindBuffer(GLES20.GL_ARRAY_BUFFER, mCubeBufferIdx);
-        glEnableVertexAttribArray(mPositionHandle);
-        glVertexAttribPointer(mPositionHandle, 2, GLES20.GL_FLOAT, false, 0, 0);
+        if (mCubeBufferIdx != -1) {
+            glBindBuffer(GLES20.GL_ARRAY_BUFFER, mCubeBufferIdx);
+            glEnableVertexAttribArray(mPositionHandle);
+            glVertexAttribPointer(mPositionHandle, 2, GLES20.GL_FLOAT, false, 0, 0);
+        }
 
 //        glEnableVertexAttribArray(mPositionHandle);
 
@@ -108,7 +110,7 @@ public class Point {
         glLineWidth(5);
 
         if (mBufferSize != 0)
-            glDrawArrays(GL_POINTS, 0, mBufferSize);
+            glDrawArrays(GL_LINES, 0, mBufferSize);
 
         glDisableVertexAttribArray(mPositionHandle);
 
@@ -145,6 +147,13 @@ public class Point {
         positionBuffer.put(positions).position(0);
 
         return positionBuffer;
+    }
+
+    public void releaseBuffers() {
+
+        final int[] buffersToDelete = new int[]{mCubeBufferIdx};
+        GLES20.glDeleteBuffers(buffersToDelete.length, buffersToDelete, 0);
+
     }
 
 

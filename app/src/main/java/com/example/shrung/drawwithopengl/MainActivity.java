@@ -14,7 +14,7 @@ public class MainActivity extends AppCompatActivity {
     private MyGLSurfaceView mMyGLSurfaceView;
     private MyRenderer mMyRenderer;
     private ArrayList<Point> mPoints = new ArrayList<>();
-    private Point mPoint;
+    private Point mPoint = new Point();
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -50,11 +50,13 @@ public class MainActivity extends AppCompatActivity {
                         mMyGLSurfaceView.queueEvent(new Runnable() {
                             @Override
                             public void run() {
-                                mPoint = new Point(normalizedX,normalizedY);
+                                mPoint.mX = normalizedX;
+                                mPoint.mY = normalizedY;
                                 mPoints.add(mPoint);
                                 if(mMyRenderer != null){
                                     mMyRenderer.addDataToBuffer(mPoint);
                                 }
+
                                 Log.e("Points","x: "+mPoint.mX+"\t"+"y: "+mPoint.mY+"\n");
 
                             }

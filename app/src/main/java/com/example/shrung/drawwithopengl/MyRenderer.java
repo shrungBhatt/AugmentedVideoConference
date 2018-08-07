@@ -77,7 +77,11 @@ public class MyRenderer implements GLSurfaceView.Renderer {
             positions[i] = temp[i];
         }
 
-        mPoint.generateBuffers(positions);
+        if (mPoint != null) {
+            mPoint.releaseBuffers();
+
+            mPoint.generateBuffers(positions);
+        }
 
     }
 
