@@ -52,6 +52,9 @@ public class MainActivity extends AppCompatActivity {
                             public void run() {
                                 mPoint = new Point(normalizedX,normalizedY);
                                 mPoints.add(mPoint);
+                                if(mMyRenderer != null){
+                                    mMyRenderer.addDataToBuffer(mPoint);
+                                }
                                 Log.e("Points","x: "+mPoint.mX+"\t"+"y: "+mPoint.mY+"\n");
 
                             }
