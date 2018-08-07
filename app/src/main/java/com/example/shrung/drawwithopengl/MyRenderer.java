@@ -4,6 +4,9 @@ import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
@@ -16,15 +19,16 @@ public class MyRenderer implements GLSurfaceView.Renderer {
 
     private Context mContext;
     private Point mPoint;
+    private ArrayList<Float> mPointerPositions = new ArrayList<>();
 
 
-    public MyRenderer(Context context){
+    public MyRenderer(Context context) {
         mContext = context;
     }
 
     @Override
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
-        glClearColor(0.0f,0.0f,0.0f,0.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
         mPoint = new Point();
 
@@ -33,7 +37,7 @@ public class MyRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceChanged(GL10 gl10, int width, int height) {
 
-        glViewport(0,0,width,height);
+        glViewport(0, 0, width, height);
 
 
     }
@@ -60,17 +64,28 @@ public class MyRenderer implements GLSurfaceView.Renderer {
         return shader;
     }
 
-    public void addDataToBuffer(Point point){
-        mPoint.vertexBuffer.put(point.mX);
-        mPoint.vertexBuffer.put(point.mY);
-        mPoint.vertexBuffer.position(0);
+    public void addDataToBuffer(Point point) {
+        mPointerPositions.add(point.mX);
+        mPointerPositions.add(point.mY);
+
+        Float[] temp = new Float[mPointerPositions.size()];
+        mPointerPositions.toArray(temp);
+
+        float[] positions = new float[temp.length];
+
+        for (int i = 0; i < temp.length; i++) {
+            positions[i] = temp[i];
+        }
+
+        mPoint.generateBuffers(positions);
+
     }
 
-    private void setX(float normalizedX){
+    private void setX(float normalizedX) {
         mPoint.mX = normalizedX;
     }
 
-    private void setY(float normalizedY){
+    private void setY(float normalizedY) {
         mPoint.mY = normalizedY;
     }
 }
