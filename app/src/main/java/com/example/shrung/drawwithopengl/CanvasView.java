@@ -2,7 +2,7 @@ package com.example.shrung.drawwithopengl;
 
 /**
  * CanvasView.java
- *
+ * <p>
  * Copyright (c) 2014 Tomohiro IKEDA (Korilakkuma)
  * Released under the MIT license
  */
@@ -27,6 +27,8 @@ import android.view.View;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -52,10 +54,10 @@ public class CanvasView extends View {
         QUBIC_BEZIER;
     }
 
-    private Canvas canvas   = null;
-    private Bitmap bitmap   = null;
+    private Canvas canvas = null;
+    private Bitmap bitmap = null;
 
-    private List<Path>  pathLists  = new ArrayList<Path>();
+    private List<Path> pathLists = new ArrayList<Path>();
     private List<Paint> paintLists = new ArrayList<Paint>();
 
     private final Paint emptyPaint = new Paint();
@@ -67,34 +69,88 @@ public class CanvasView extends View {
     private int historyPointer = 0;
 
     // Flags
-    private Mode mode      = Mode.DRAW;
-    private Drawer drawer  = Drawer.PEN;
+    private Mode mode = Mode.DRAW;
+    private Drawer drawer = Drawer.PEN;
     private boolean isDown = false;
 
     // for Paint
-    private Paint.Style paintStyle    = Paint.Style.STROKE;
-    private int paintStrokeColor      = Color.BLACK;
-    private int paintFillColor        = Color.BLACK;
-    private float paintStrokeWidth    = 3F;
-    private int opacity               = 255;
-    private float blur                = 0F;
-    private Paint.Cap lineCap         = Paint.Cap.ROUND;
+    private Paint.Style paintStyle = Paint.Style.STROKE;
+    private int paintStrokeColor = Color.BLACK;
+    private int paintFillColor = Color.BLACK;
+    private float paintStrokeWidth = 3F;
+    private int opacity = 255;
+    private float blur = 0F;
+    private Paint.Cap lineCap = Paint.Cap.ROUND;
     private PathEffect drawPathEffect = null;
 
     // for Text
-    private String text           = "";
-    private Typeface fontFamily   = Typeface.DEFAULT;
-    private float fontSize        = 32F;
+    private String text = "";
+    private Typeface fontFamily = Typeface.DEFAULT;
+    private float fontSize = 32F;
     private Paint.Align textAlign = Paint.Align.RIGHT;  // fixed
-    private Paint textPaint       = new Paint();
-    private float textX           = 0F;
-    private float textY           = 0F;
+    private Paint textPaint = new Paint();
+    private float textX = 0F;
+    private float textY = 0F;
 
     // for Drawer
-    private float startX   = 0F;
-    private float startY   = 0F;
+    private float startX = 0F;
+    private float startY = 0F;
     private float controlX = 0F;
     private float controlY = 0F;
+
+    private Float[] pointX;
+    private Float[] pointY;
+    private Point mMinPointX;
+    private Point mMinPointY;
+    private Point mIntersectionPoint;
+
+    private float minX;
+    private float maxX;
+    private float minY;
+    private float maxY;
+
+    private ArrayList<Float> xArrayList = new ArrayList<>();
+    private ArrayList<Float> yArrayList = new ArrayList<>();
+
+    public Float[] getPointX() {
+        return pointX;
+    }
+
+    public void setPointX(Float[] pointX) {
+        this.pointX = pointX;
+    }
+
+    public Float[] getPointY() {
+        return pointY;
+    }
+
+    public void setPointY(Float[] pointY) {
+        this.pointY = pointY;
+    }
+
+    public Point getMinPointX() {
+        return mMinPointX;
+    }
+
+    public Point getMinPointY() {
+        return mMinPointY;
+    }
+
+    private void setMinPointX(Point pointX) {
+        mMinPointX = pointX;
+    }
+
+    public void setMinPointY(Point pointY) {
+        mMinPointY = pointY;
+    }
+
+    public Point getIntersectionPoint() {
+        return mIntersectionPoint;
+    }
+
+    public void setIntersectionPoint(Point intersectionPoint) {
+        mIntersectionPoint = intersectionPoint;
+    }
 
     /**
      * Copy Constructor
@@ -131,7 +187,6 @@ public class CanvasView extends View {
 
     /**
      * Common initialization.
-     *
      */
     private void setup() {
 
@@ -259,12 +314,12 @@ public class CanvasView extends View {
         Paint paintForMeasureText = new Paint();
 
         // Line break automatically
-        float textLength   = paintForMeasureText.measureText(this.text);
-        float lengthOfChar = textLength / (float)this.text.length();
-        float restWidth    = this.canvas.getWidth() - textX;  // text-align : right
-        int numChars       = (lengthOfChar <= 0) ? 1 : (int)Math.floor((double)(restWidth / lengthOfChar));  // The number of characters at 1 line
-        int modNumChars    = (numChars < 1) ? 1 : numChars;
-        float y            = textY;
+        float textLength = paintForMeasureText.measureText(this.text);
+        float lengthOfChar = textLength / (float) this.text.length();
+        float restWidth = this.canvas.getWidth() - textX;  // text-align : right
+        int numChars = (lengthOfChar <= 0) ? 1 : (int) Math.floor((double) (restWidth / lengthOfChar));  // The number of characters at 1 line
+        int modNumChars = (numChars < 1) ? 1 : numChars;
+        float y = textY;
 
         for (int i = 0, len = this.text.length(); i < len; i += modNumChars) {
             String substring = "";
@@ -288,8 +343,8 @@ public class CanvasView extends View {
      */
     private void onActionDown(MotionEvent event) {
         switch (this.mode) {
-            case DRAW   :
-            case ERASER :
+            case DRAW:
+            case ERASER:
                 if ((this.drawer != Drawer.QUADRATIC_BEZIER) && (this.drawer != Drawer.QUBIC_BEZIER)) {
                     // Oherwise
                     this.updateHistory(this.createPath(event));
@@ -309,12 +364,12 @@ public class CanvasView extends View {
                 }
 
                 break;
-            case TEXT   :
+            case TEXT:
                 this.startX = event.getX();
                 this.startY = event.getY();
 
                 break;
-            default :
+            default:
                 break;
         }
     }
@@ -328,12 +383,13 @@ public class CanvasView extends View {
         float x = event.getX();
         float y = event.getY();
 
-        Log.e("Points","x: "+x+"\t"+"y: "+y+"\n");
+        Log.e("Points", "x: " + x + "\t" + "y: " + y + "\n");
 
+        generateArrayOfPoints(x, y);
 
         switch (this.mode) {
-            case DRAW   :
-            case ERASER :
+            case DRAW:
+            case ERASER:
 
                 if ((this.drawer != Drawer.QUADRATIC_BEZIER) && (this.drawer != Drawer.QUBIC_BEZIER)) {
                     if (!isDown) {
@@ -343,39 +399,39 @@ public class CanvasView extends View {
                     Path path = this.getCurrentPath();
 
                     switch (this.drawer) {
-                        case PEN :
+                        case PEN:
                             path.lineTo(x, y);
                             break;
-                        case LINE :
+                        case LINE:
                             path.reset();
                             path.moveTo(this.startX, this.startY);
                             path.lineTo(x, y);
                             break;
-                        case RECTANGLE :
+                        case RECTANGLE:
                             path.reset();
 
-                            float left   = Math.min(this.startX, x);
-                            float right  = Math.max(this.startX, x);
-                            float top    = Math.min(this.startY, y);
+                            float left = Math.min(this.startX, x);
+                            float right = Math.max(this.startX, x);
+                            float top = Math.min(this.startY, y);
                             float bottom = Math.max(this.startY, y);
 
                             path.addRect(left, top, right, bottom, Path.Direction.CCW);
                             break;
-                        case CIRCLE :
-                            double distanceX = Math.abs((double)(this.startX - x));
-                            double distanceY = Math.abs((double)(this.startX - y));
-                            double radius    = Math.sqrt(Math.pow(distanceX, 2.0) + Math.pow(distanceY, 2.0));
+                        case CIRCLE:
+                            double distanceX = Math.abs((double) (this.startX - x));
+                            double distanceY = Math.abs((double) (this.startX - y));
+                            double radius = Math.sqrt(Math.pow(distanceX, 2.0) + Math.pow(distanceY, 2.0));
 
                             path.reset();
-                            path.addCircle(this.startX, this.startY, (float)radius, Path.Direction.CCW);
+                            path.addCircle(this.startX, this.startY, (float) radius, Path.Direction.CCW);
                             break;
-                        case ELLIPSE :
+                        case ELLIPSE:
                             RectF rect = new RectF(this.startX, this.startY, x, y);
 
                             path.reset();
                             path.addOval(rect, Path.Direction.CCW);
                             break;
-                        default :
+                        default:
                             break;
                     }
                 } else {
@@ -391,15 +447,86 @@ public class CanvasView extends View {
                 }
 
                 break;
-            case TEXT :
+            case TEXT:
                 this.startX = x;
                 this.startY = y;
 
                 break;
-            default :
+            default:
                 break;
         }
     }
+
+    private void generateArrayOfPoints(float x, float y) {
+
+        xArrayList.add(x);
+        yArrayList.add(y);
+
+        Point pointX = generateMinPointX(xArrayList, yArrayList);
+        Point pointY = generateMinPointY(xArrayList, yArrayList);
+
+        setPointX(getPositionPrimitiveArray(xArrayList));
+        setPointY(getPositionPrimitiveArray(yArrayList));
+    }
+
+    private Float[] getPositionPrimitiveArray(ArrayList<Float> floats) {
+        Float[] temp = new Float[floats.size()];
+
+        floats.toArray(temp);
+
+
+        return temp;
+    }
+
+
+    private Point generateMinPointX(ArrayList<Float> pointsX, ArrayList<Float> pointsY) {
+        Point point = new Point();
+
+        float min = pointsX.get(0);
+
+        for (int i = 1; i < pointsX.size(); i++) {
+            if (pointsX.get(i) < min) {
+                min = pointsX.get(i);
+                point.mX = pointsX.get(i);
+                point.mY = pointsY.get(i);
+            }
+
+        }
+
+        setMinPointX(point);
+
+        return point;
+    }
+
+    private Point generateMinPointY(ArrayList<Float> pointsX, ArrayList<Float> pointsY) {
+        Point point = new Point();
+
+        float min = pointsY.get(0);
+
+        for (int i = 1; i < pointsY.size(); i++) {
+            if (pointsY.get(i) < min) {
+                min = pointsY.get(i);
+                point.mY = pointsY.get(i);
+                point.mX = pointsX.get(i);
+            }
+
+        }
+
+        setMinPointY(point);
+
+        return point;
+    }
+
+    public Point intersectionPoint(Point minPointX, Point minPointY) {
+
+        Point intersectionPoint = new Point(minPointX.mX, 0);
+
+        intersectionPoint.mY = minPointY.mX + minPointY.mY - intersectionPoint.mX;
+
+        return intersectionPoint;
+
+    }
+
 
     /**
      * This method defines processes on MotionEvent.ACTION_DOWN
@@ -412,6 +539,19 @@ public class CanvasView extends View {
             this.startY = 0F;
             this.isDown = false;
         }
+
+        float minX = Collections.min(Arrays.asList(getPointX()));
+
+        float maxX = Collections.max(Arrays.asList(getPointX()));
+
+        float minY = Collections.min(Arrays.asList(getPointY()));
+
+        float maxY = Collections.max(Arrays.asList(getPointY()));
+
+        Point point = intersectionPoint(getMinPointX(),getMinPointY());
+
+        setIntersectionPoint(point);
+
     }
 
     /**
@@ -431,7 +571,7 @@ public class CanvasView extends View {
         }
 
         for (int i = 0; i < this.historyPointer; i++) {
-            Path path   = this.pathLists.get(i);
+            Path path = this.pathLists.get(i);
             Paint paint = this.paintLists.get(i);
 
             canvas.drawPath(path, paint);
@@ -454,13 +594,13 @@ public class CanvasView extends View {
             case MotionEvent.ACTION_DOWN:
                 this.onActionDown(event);
                 break;
-            case MotionEvent.ACTION_MOVE :
+            case MotionEvent.ACTION_MOVE:
                 this.onActionMove(event);
                 break;
-            case MotionEvent.ACTION_UP :
+            case MotionEvent.ACTION_UP:
                 this.onActionUp(event);
                 break;
-            default :
+            default:
                 break;
         }
 
@@ -673,7 +813,9 @@ public class CanvasView extends View {
      */
     public int getPaintFillColor() {
         return this.paintFillColor;
-    };
+    }
+
+    ;
 
     /**
      * This method is setter for fill color.
@@ -726,7 +868,7 @@ public class CanvasView extends View {
         if ((opacity >= 0) && (opacity <= 255)) {
             this.opacity = opacity;
         } else {
-            this.opacity= 255;
+            this.opacity = 255;
         }
     }
 
@@ -788,6 +930,7 @@ public class CanvasView extends View {
     public void setDrawPathEffect(PathEffect drawPathEffect) {
         this.drawPathEffect = drawPathEffect;
     }
+
     /**
      * This method is getter for font size,
      *
