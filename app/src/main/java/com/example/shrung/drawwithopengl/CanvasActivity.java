@@ -2,27 +2,25 @@ package com.example.shrung.drawwithopengl;
 
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageView;
 
-import java.util.Arrays;
-import java.util.Collections;
 
 public class CanvasActivity extends AppCompatActivity {
 
 
     private ImageView mImageView;
     private CanvasView mCanvasView;
+    private Button mCropButton;
+    private Button mResetButton;
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -43,32 +41,24 @@ public class CanvasActivity extends AppCompatActivity {
         Float[] floats = new Float[10];
 
 
-
-        /*mCanvasView.setOnTouchListener(new View.OnTouchListener() {
+        mCropButton = findViewById(R.id.crop_button);
+        mCropButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event != null) {
-                    // Convert touch coordinates into normalized device
-                    // coordinates, keeping in mind that Android's Y
-                    // coordinates are inverted.
-                    final float normalizedX =
-                            (event.getX() / (float) v.getWidth()) * 2 - 1;
-                    final float normalizedY =
-                            -((event.getY() / (float) v.getHeight()) * 2 - 1);
+            public void onClick(View view) {
+                cropImage();
 
-
-                    if (event.getAction() == MotionEvent.ACTION_DOWN) {
-
-                    } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
-
-                    }
-
-                    return true;
-                } else {
-                    return false;
-                }
             }
-        });*/
+        });
+
+        mResetButton = findViewById(R.id.reset_button);
+        mResetButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mCanvasView.clear();
+                mCanvasView.invalidate();
+                mImageView.setImageDrawable(getDrawable(R.drawable.wall));
+            }
+        });
 
     }
 
@@ -84,15 +74,21 @@ public class CanvasActivity extends AppCompatActivity {
     }
 
 
-    public void cropImage(View view) {
+    public void cropImage() {
 
         BitmapDrawable drawable = (BitmapDrawable) mImageView.getDrawable();
         Bitmap bitmap = drawable.getBitmap();
 
-        Bitmap result =
-                Bitmap.createBitmap(bitmap, (int) mCanvasView.getIntersectionPoint().mX,
-                        (int) mCanvasView.getIntersectionPoint().mY, 500, 800, null,
-                        true);
+        int croppedWidth = (int) mCanvasView.getCroppedWidth();
+        int croppedHeight = (int) mCanvasView.getCroppedHeight();
+
+        int width = bitmap.getWidth() <= croppedWidth ? bitmap.getWidth() : croppedWidth;
+        int height = bitmap.getHeight() <= croppedHeight ? bitmap.getHeight() : croppedHeight;
+
+        int pointX = (int) mCanvasView.getIntersectionPoint().mX;
+        int pointY = (int) mCanvasView.getIntersectionPoint().mY;
+
+        Bitmap result = Bitmap.createBitmap(bitmap, pointX, pointY, width, height, null, true);
 
         mImageView.setImageBitmap(result);
     }

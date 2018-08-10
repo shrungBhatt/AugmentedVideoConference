@@ -103,6 +103,8 @@ public class CanvasView extends View {
     private Point mMinPointX;
     private Point mMinPointY;
     private Point mIntersectionPoint;
+    private float mCroppedWidth;
+    private float mCroppedHeight;
 
     private float minX;
     private float maxX;
@@ -150,6 +152,22 @@ public class CanvasView extends View {
 
     public void setIntersectionPoint(Point intersectionPoint) {
         mIntersectionPoint = intersectionPoint;
+    }
+
+    public float getCroppedWidth() {
+        return mCroppedWidth;
+    }
+
+    public void setCroppedWidth(float croppedWidth) {
+        mCroppedWidth = croppedWidth;
+    }
+
+    public float getCroppedHeight() {
+        return mCroppedHeight;
+    }
+
+    public void setCroppedHeight(float croppedHeight) {
+        mCroppedHeight = croppedHeight;
     }
 
     /**
@@ -547,6 +565,10 @@ public class CanvasView extends View {
         float minY = Collections.min(Arrays.asList(getPointY()));
 
         float maxY = Collections.max(Arrays.asList(getPointY()));
+
+        setCroppedHeight(maxY - minY);
+
+        setCroppedWidth(maxX - minX);
 
         Point point = intersectionPoint(getMinPointX(),getMinPointY());
 
