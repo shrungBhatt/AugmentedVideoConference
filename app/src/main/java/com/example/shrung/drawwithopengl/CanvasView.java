@@ -403,7 +403,7 @@ public class CanvasView extends View {
 
         Log.e("Points", "x: " + x + "\t" + "y: " + y + "\n");
 
-        generateArrayOfPoints(x, y);
+        generateArrayOfPoints(x * 2.55f, y * 2.55f);
 
         switch (this.mode) {
             case DRAW:
@@ -480,8 +480,8 @@ public class CanvasView extends View {
         xArrayList.add(x);
         yArrayList.add(y);
 
-        Point pointX = generateMinPointX(xArrayList, yArrayList);
-        Point pointY = generateMinPointY(xArrayList, yArrayList);
+        setMinPointX(generateMinPointX(xArrayList, yArrayList));
+        setMinPointY(generateMinPointY(xArrayList, yArrayList));
 
         setPointX(getPositionPrimitiveArray(xArrayList));
         setPointY(getPositionPrimitiveArray(yArrayList));
@@ -511,8 +511,6 @@ public class CanvasView extends View {
 
         }
 
-        setMinPointX(point);
-
         return point;
     }
 
@@ -524,13 +522,13 @@ public class CanvasView extends View {
         for (int i = 1; i < pointsY.size(); i++) {
             if (pointsY.get(i) < min) {
                 min = pointsY.get(i);
-                point.mY = pointsY.get(i);
                 point.mX = pointsX.get(i);
+                point.mY = pointsY.get(i);
             }
 
         }
 
-        setMinPointY(point);
+        Log.e("Min","Min point x -> " +point.mX + " y -> "+point.mY);
 
         return point;
     }
@@ -570,7 +568,7 @@ public class CanvasView extends View {
 
         setCroppedWidth(maxX - minX);
 
-        Point point = intersectionPoint(getMinPointX(),getMinPointY());
+        Point point = intersectionPoint(getMinPointX(), getMinPointY());
 
         setIntersectionPoint(point);
 
@@ -1074,6 +1072,18 @@ public class CanvasView extends View {
      */
     public byte[] getBitmapAsByteArray() {
         return this.getBitmapAsByteArray(CompressFormat.PNG, 100);
+    }
+
+
+    public void clearDrawnPoints() {
+
+        if (xArrayList != null && xArrayList.size() != 0) {
+            xArrayList.clear();
+        }
+
+        if (yArrayList != null && yArrayList.size() != 0) {
+            yArrayList.clear();
+        }
     }
 
 }
