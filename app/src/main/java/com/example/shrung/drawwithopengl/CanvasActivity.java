@@ -90,7 +90,7 @@ public class CanvasActivity extends AppCompatActivity {
     private void initCanvas() {
         if (mCanvasView != null) {
             mCanvasView.setMode(CanvasView.Mode.DRAW);
-            mCanvasView.setDrawer(CanvasView.Drawer.CIRCLE);
+            mCanvasView.setDrawer(CanvasView.Drawer.PEN);
             mCanvasView.setBaseColor(Color.TRANSPARENT);
             mCanvasView.setPaintStrokeColor(Color.GREEN);
             mCanvasView.setPaintStrokeWidth(5f);
