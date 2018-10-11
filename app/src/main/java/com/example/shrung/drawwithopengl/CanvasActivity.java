@@ -94,6 +94,7 @@ public class CanvasActivity extends AppCompatActivity {
             mCanvasView.setBaseColor(Color.TRANSPARENT);
             mCanvasView.setPaintStrokeColor(Color.GREEN);
             mCanvasView.setPaintStrokeWidth(5f);
+
         }
     }
 
